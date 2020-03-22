@@ -2,6 +2,7 @@ from django.db import models
 
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
+from flash.organization.models import Organization
 
 
 # Abstract class, base for Product and Organization (in future)
@@ -14,15 +15,6 @@ class QWE(models.Model):
 
     class Meta:
         abstract = True
-
-
-class Organization(QWE):
-    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE)
-
-
-class Filial(models.Model):
-    address = models.CharField(max_length=100)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
 
 class Category(models.Model):

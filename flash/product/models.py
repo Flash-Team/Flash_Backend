@@ -16,9 +16,9 @@ class QWE(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=30)
 
-
+#Added max_digits to price & commented organization field
 class Product(QWE):
-    price = models.DecimalField(decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     # Foreign key for None because there is no model for organizations
-    organization = models.ForeignKey(None, on_delete=models.CASCADE)
+    # organization = models.ForeignKey(None, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

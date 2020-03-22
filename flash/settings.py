@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'flash._auth',
     'flash.product',
     'flash.order',
-
+    'flash.organization',
 ]
 
 # Override default user

@@ -13,4 +13,4 @@ Flash is a food delivery service. Our food delivery website is a service for cli
 | Ayanbek Shynara | [shynaraaya](https://github.com/shynaraaya) |
 
 ## Database schema
-<iframe width="560" height="315" src="https://dbdiagram.io/embed/5d9859a7ff5115114db4eeb8"> </iframe>
+[Here it is!](https://dbdiagram.io/d/5d9859a7ff5115114db4eeb8)

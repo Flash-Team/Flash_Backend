@@ -2,10 +2,10 @@ from django.db import models
 
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
-from flash.product.models import QWE
+from flash.product.bases import BaseProduct
 
 
-class Organization(QWE):
+class Organization(BaseProduct):
     manager = models.ForeignKey(MyUser, on_delete=models.CASCADE)
 
 

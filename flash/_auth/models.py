@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserM
 
 
 class MyAbstractUser(AbstractBaseUser, PermissionsMixin):
+
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
@@ -25,12 +26,14 @@ class MyAbstractUser(AbstractBaseUser, PermissionsMixin):
 
 
 class MyUser(MyAbstractUser):
+
     USER_ROLES = (
         (1, 'Admin'),
         (2, 'Manager'),
         (3, 'Client'),
         (4, 'Courier')
     )
+
     role = models.IntegerField(choices=USER_ROLES, default=3)
 
     def set_user_role(self, value):

@@ -1,9 +1,9 @@
 from django.db import models
-from django.utils import timezone
+
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
-from flash.product.models import Product, Filial
-from django.core.validators import MinValueValidator
+from flash.organization.models import Filial
+from flash.product.models import Product
 
 
 class Order(models.Model):
@@ -13,10 +13,10 @@ class Order(models.Model):
     client = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='client')
     courier = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='courier')
     delivered = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now=True)
 
 
 class OrderedProduct(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    count = models.PositiveIntegerField(default=1, validators=[MinValueValidator])
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+    count = models.IntegerField(default=1)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

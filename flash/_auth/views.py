@@ -1,17 +1,19 @@
-from rest_framework import mixins, viewsets
+import json
+
+from django.http import JsonResponse
+from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import AllowAny
 
-from flash._auth.models import MyUser
-from flash._auth.serializers import UserSerializer
+from flash._auth.serializers import RegisterSerializer
 
 
-class UserCreate(viewsets.GenericViewSet, mixins.CreateModelMixin):
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def register(request):
+    data = json.loads(request.body)
+    serializer = RegisterSerializer(data=data)
 
-    permission_classes = (AllowAny, )
-    authentication_classes = ()
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
 
-    def get_queryset(self):
-        return MyUser.objects.all()
-
-    def get_serializer_class(self):
-        return UserSerializer
+    return JsonResponse(serializer.data, status=201)

@@ -15,7 +15,7 @@ def wrong_role(value):
         raise serializers.ValidationError('Role not found')
 
 
-class UserSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
     role = serializers.IntegerField(validators=[wrong_role])

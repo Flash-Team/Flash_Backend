@@ -25,20 +25,20 @@ class CategoryView(generics.RetrieveUpdateDestroyAPIView):
 class ProductsListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
-        return Product.objects.filter(order=self.kwargs.get('pk'))
+        return Product.objects.filter(category=self.kwargs.get('pk'))
 
     def get_serializer_class(self):
         return Product2Serializer
 
     def perform_create(self, serializer):
-        order_id = self.kwargs.get('pk')
-        serializer.save(category=Category.objects.get(id=order_id))
+        category_id = self.kwargs.get('pk')
+        serializer.save(category=Category.objects.get(id=category_id))
 
 
 class ProductListView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
-        return Product.objects.filter(id=self.kwargs.get('pk'), order=self.kwargs.get('pk2'))
+        return Product.objects.filter(id=self.kwargs.get('pk'), category=self.kwargs.get('pk2'))
 
     def get_serializer_class(self):
         return Product2Serializer

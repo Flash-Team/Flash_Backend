@@ -15,5 +15,5 @@ class Category(models.Model):
 
 class Product(BaseProduct):
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

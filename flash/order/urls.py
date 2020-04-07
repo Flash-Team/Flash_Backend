@@ -1,15 +1,12 @@
-from django.urls import path
-from rest_framework.routers import SimpleRouter
+from rest_framework_extensions.routers import ExtendedSimpleRouter
 
-from flash.order.views import ProductsView, ProductView, OrdersViewSet
+from flash.order.views import OrdersViewSet, ProductsViewSet
 
-router = SimpleRouter()
+router = ExtendedSimpleRouter()
 
-router.register('', OrdersViewSet, basename='order')
+(
+    router.register('', OrdersViewSet, basename='order').
+    register(r'product', ProductsViewSet, basename='product', parents_query_lookups=['order'])
+)
 
-urlpatterns = [
-    path('<int:pk>/product/', ProductsView.as_view()),
-    path('<int:pk2>/product/<int:pk>/', ProductView.as_view()),
-]
-
-urlpatterns += router.urls
+urlpatterns = router.urls

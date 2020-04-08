@@ -34,3 +34,27 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class UsersSerializer(serializers.ModelSerializer):
+
+    username = serializers.CharField(read_only=True)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = MyUser
+        fields = ('id', 'username', 'is_superuser', 'password', 'role',)
+
+    def update(self, instance, validated_data):
+        if validated_data.get('password'):
+            instance.set_password(validated_data.get('password'))
+
+        if validated_data.get('is_superuser'):
+            instance.is_superuser = validated_data.get('is_superuser')
+
+        if validated_data.get('role'):
+            instance.role = validated_data.get('role')
+
+        instance.save()
+
+        return instance

@@ -6,7 +6,7 @@ from flash.product.bases import BaseProduct
 
 
 class Organization(BaseProduct):
-    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE)
 
 
 class Filial(models.Model):

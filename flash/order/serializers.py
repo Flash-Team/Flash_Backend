@@ -24,3 +24,27 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderedProduct
         fields = ('id', 'product', 'count', 'order',)
+
+
+# Ensure that value of rating is between 0 and 5
+def rating_validator(value):
+    if value > 5 or value <= 0:
+        raise serializers.ValidationError('Invalid rating value')
+
+
+class OrderRateSerializer(serializers.Serializer):
+
+    value = serializers.IntegerField(validators=[rating_validator])
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+
+        for product in instance.products.all():
+            product.product.sum += validated_data.get('value')
+            product.product.count += 1
+
+            product.product.save()
+
+        return instance

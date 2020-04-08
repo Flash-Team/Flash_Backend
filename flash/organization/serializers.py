@@ -11,6 +11,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class FilialSerializer(serializers.ModelSerializer):
     organization = OrganizationSerializer(read_only=True)
+
     class Meta:
         model = Filial
         fields = ('id', 'address', 'organization',)

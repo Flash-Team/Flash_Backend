@@ -25,20 +25,20 @@ class OrganizationView(generics.RetrieveUpdateDestroyAPIView):
 class FilialsView(generics.ListCreateAPIView):
 
     def get_queryset(self):
-        return Filial.objects.filter(order=self.kwargs.get('pk'))
+        return Filial.objects.filter(organization=self.kwargs.get('pk'))
 
     def get_serializer_class(self):
         return FilialSerializer
 
     def perform_create(self, serializer):
-        order_id = self.kwargs.get('pk')
-        serializer.save(filial=Filial.objects.get(id=order_id))
+        organization_id = self.kwargs.get('pk')
+        serializer.save(organization=Organization.objects.get(id=organization_id))
 
 
 class FilialView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
-        return Filial.objects.filter(id=self.kwargs.get('pk'), order=self.kwargs.get('pk2'))
+        return Filial.objects.filter(id=self.kwargs.get('pk'), organization=self.kwargs.get('pk2'))
 
     def get_serializer_class(self):
         return FilialSerializer

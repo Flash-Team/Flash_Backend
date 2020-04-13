@@ -15,7 +15,7 @@ class Order(models.Model):
     delivered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now=True)
 
-    def set_price(self, value):
+    def save_price(self, value):
         self.price = value
         self.save()
 
@@ -42,9 +42,25 @@ class Order(models.Model):
 
             price += product.price
 
-        order.set_price(price)
+        order.save_price(price)
 
         return order
+
+    @classmethod
+    def get_orders(cls, user, delivered=None):
+        if user.role == 3:
+            orders = Order.objects.filter(client=user)
+
+        elif user.role == 4:
+            orders = Order.objects.filter(courier=user)
+
+        else:
+            orders = Order.objects.all()
+
+        if delivered is not None and delivered in ('True', 'False'):
+            orders = orders.filter(delivered=delivered)
+
+        return orders
 
 
 class OrderedProduct(models.Model):

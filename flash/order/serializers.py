@@ -45,7 +45,7 @@ class OrderRateSerializer(serializers.Serializer):
 
             product.product.save()
 
-        instance.compete()
+        instance.complete()
 
         return instance
 

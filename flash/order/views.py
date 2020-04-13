@@ -3,11 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
+from flash.order.filters import OrderFilter
 from flash.order.models import Order, OrderedProduct
 from flash.order.serializers import OrderSerializer, ProductSerializer, OrderRateSerializer, OrderProductsSerializer
 
 
 class OrdersViewSet(viewsets.ModelViewSet):
+
+    filter_backends = [OrderFilter, ]
 
     def get_queryset(self):
         return Order.objects.all()
@@ -15,7 +18,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return OrderProductsSerializer
-        
+
         return OrderSerializer
 
     def get_permissions(self):
@@ -23,7 +26,9 @@ class OrdersViewSet(viewsets.ModelViewSet):
             if self.request.user.role in (1, 3):
                 return IsAuthenticated(),
 
-        return IsAdminUser(),
+            return IsAdminUser(),
+
+        return IsAuthenticated(),
 
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)

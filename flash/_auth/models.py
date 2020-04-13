@@ -1,6 +1,6 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 
 
 class MyAbstractUser(AbstractBaseUser, PermissionsMixin):
@@ -38,3 +38,7 @@ class MyUser(MyAbstractUser):
 
     def set_user_role(self, value):
         self.role = value
+
+    @property
+    def undone_orders(self):
+        return self.orders.filter(delivered=False)

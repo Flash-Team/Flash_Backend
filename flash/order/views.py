@@ -1,9 +1,10 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from flash.order.models import Order, OrderedProduct
-from flash.order.serializers import OrderSerializer, ProductSerializer, OrderRateSerializer
+from flash.order.serializers import OrderSerializer, ProductSerializer, OrderRateSerializer, OrderProductsSerializer
 
 
 class OrdersViewSet(viewsets.ModelViewSet):
@@ -12,13 +13,26 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return Order.objects.all()
 
     def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return OrderProductsSerializer
+        
         return OrderSerializer
 
-    """
-    Rate all products in following order by value (between 0 and 5)
-    """
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            if self.request.user.role in (1, 3):
+                return IsAuthenticated(),
+
+        return IsAdminUser(),
+
+    def perform_create(self, serializer):
+        serializer.save(client=self.request.user)
+
     @action(detail=True, methods=['patch'])
     def rate(self, request, pk):
+        """
+        Rate all products in following order by value (between 0 and 5)
+        """
         value = int(self.request.query_params.get('value'))
 
         serializer = OrderRateSerializer(self.get_object(), data={'value': value})

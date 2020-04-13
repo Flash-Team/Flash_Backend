@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
+# noinspection PyProtectedMember
+from flash._auth.serializers import CourierSerializer, ClientSerializer
 from flash.order.models import Order, OrderedProduct
+from flash.order.validators import positive_number_validator, rating_validator
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -10,26 +13,21 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'filial', 'address', 'client', 'courier', 'delivered', 'price',)
 
 
-# Ensure that count of product is positive
-def positive_number_validator(value):
-    if value < 0:
-        raise serializers.ValidationError('Count must be positive')
-
-
-class ProductSerializer(serializers.ModelSerializer):
+class NestedProductSerializer(serializers.ModelSerializer):
 
     count = serializers.IntegerField(validators=[positive_number_validator])
-    order = OrderSerializer(read_only=True)
 
     class Meta:
         model = OrderedProduct
-        fields = ('id', 'product', 'count', 'order',)
+        fields = ('id', 'product', 'count',)
 
 
-# Ensure that value of rating is between 0 and 5
-def rating_validator(value):
-    if value > 5 or value <= 0:
-        raise serializers.ValidationError('Invalid rating value')
+class ProductSerializer(NestedProductSerializer):
+
+    order = OrderSerializer(read_only=True)
+
+    class Meta(NestedProductSerializer.Meta):
+        fields = NestedProductSerializer.Meta.fields + ('order',)
 
 
 class OrderRateSerializer(serializers.Serializer):
@@ -47,4 +45,23 @@ class OrderRateSerializer(serializers.Serializer):
 
             product.product.save()
 
+        instance.compete()
+
         return instance
+
+
+class OrderProductsSerializer(serializers.ModelSerializer):
+
+    products = NestedProductSerializer(many=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    courier = CourierSerializer(read_only=True)
+    client = ClientSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'filial', 'address', 'client', 'price', 'delivered', 'products', 'courier',)
+
+    def create(self, validated_data):
+        products = validated_data.pop('products')
+
+        return Order.create(validated_data, products)

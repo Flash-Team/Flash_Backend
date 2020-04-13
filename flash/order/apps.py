@@ -2,4 +2,7 @@ from django.apps import AppConfig
 
 
 class OrderConfig(AppConfig):
-    name = 'order'
+    name = 'flash.order'
+
+    def ready(self):
+        import flash.order.signals

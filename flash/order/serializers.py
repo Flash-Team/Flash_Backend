@@ -6,14 +6,18 @@ from flash.order.models import Order, OrderedProduct
 from flash.order.validators import positive_number_validator, rating_validator
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class BaseOrderSerializer(serializers.ModelSerializer):
+
+    courier = CourierSerializer(read_only=True)
+    client = ClientSerializer(read_only=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'filial', 'address', 'client', 'courier', 'delivered', 'price',)
+        fields = ('id', 'filial', 'address', 'client', 'price', 'delivered', 'courier',)
 
 
-class NestedProductSerializer(serializers.ModelSerializer):
+class BaseProductSerializer(serializers.ModelSerializer):
 
     count = serializers.IntegerField(validators=[positive_number_validator])
 
@@ -22,12 +26,28 @@ class NestedProductSerializer(serializers.ModelSerializer):
         fields = ('id', 'product', 'count',)
 
 
-class ProductSerializer(NestedProductSerializer):
+class OrderProductsSerializer(BaseOrderSerializer):
 
-    order = OrderSerializer(read_only=True)
+    products = BaseProductSerializer(many=True)
 
-    class Meta(NestedProductSerializer.Meta):
-        fields = NestedProductSerializer.Meta.fields + ('order',)
+    class Meta(BaseOrderSerializer.Meta):
+        fields = BaseOrderSerializer.Meta.fields + ('products',)
+
+    def create(self, validated_data):
+        """
+        Create order with ordered products together
+        """
+        products = validated_data.pop('products')
+
+        return Order.create(validated_data, products)
+
+
+class ProductSerializer(BaseProductSerializer):
+
+    order = BaseOrderSerializer(read_only=True)
+
+    class Meta(BaseProductSerializer.Meta):
+        fields = BaseProductSerializer.Meta.fields + ('order',)
 
 
 class OrderRateSerializer(serializers.Serializer):
@@ -35,33 +55,17 @@ class OrderRateSerializer(serializers.Serializer):
     value = serializers.IntegerField(validators=[rating_validator])
 
     def create(self, validated_data):
+        """
+        Cannot create order here
+        """
         pass
 
     def update(self, instance, validated_data):
-
-        for product in instance.products.all():
-            product.product.sum += validated_data.get('value')
-            product.product.count += 1
-
-            product.product.save()
+        """
+        Update each product in order, add value of rating and increase number of rates by 1
+        """
+        instance.rate(int(validated_data.get('value')))
 
         instance.complete()
 
         return instance
-
-
-class OrderProductsSerializer(serializers.ModelSerializer):
-
-    products = NestedProductSerializer(many=True)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    courier = CourierSerializer(read_only=True)
-    client = ClientSerializer(read_only=True)
-
-    class Meta:
-        model = Order
-        fields = ('id', 'filial', 'address', 'client', 'price', 'delivered', 'products', 'courier',)
-
-    def create(self, validated_data):
-        products = validated_data.pop('products')
-
-        return Order.create(validated_data, products)

@@ -1,10 +1,12 @@
-from django.urls import path
+from rest_framework_extensions.routers import ExtendedSimpleRouter
 
-from flash.organization.views import OrganizationsView, OrganizationView, FilialsView, FilialView
+from flash.organization.views import OrganizationsViewSet, FilialsViewSet
 
-urlpatterns = [
-    path('', OrganizationsView.as_view()),
-    path('<int:pk>/', OrganizationView.as_view()),
-    path('<int:pk>/filial/', FilialsView.as_view()),
-    path('<int:pk2>/filial/<int:pk>/', FilialView.as_view()),
-]
+router = ExtendedSimpleRouter()
+
+(
+    router.register('', OrganizationsViewSet, basename='organization').
+    register(r'filial', FilialsViewSet, basename='filial', parents_query_lookups=['organization'])
+)
+
+urlpatterns = router.urls

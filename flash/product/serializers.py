@@ -12,7 +12,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class Product2Serializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    organization = OrganizationSerializer(read_only=True)
 
     class Meta:
         model = Product

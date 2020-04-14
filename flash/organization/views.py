@@ -1,10 +1,10 @@
-from rest_framework import generics
+from rest_framework import viewsets
 
 from flash.organization.models import Organization, Filial
 from flash.organization.serializers import OrganizationSerializer, FilialSerializer
 
 
-class OrganizationsView(generics.ListCreateAPIView):
+class OrganizationsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Organization.objects.all()
@@ -13,32 +13,14 @@ class OrganizationsView(generics.ListCreateAPIView):
         return OrganizationSerializer
 
 
-class OrganizationView(generics.RetrieveUpdateDestroyAPIView):
+class FilialsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
-        return Organization.objects.all()
-
-    def get_serializer_class(self):
-        return OrganizationSerializer
-
-
-class FilialsView(generics.ListCreateAPIView):
-
-    def get_queryset(self):
-        return Filial.objects.filter(organization=self.kwargs.get('pk'))
+        return Filial.objects.filter(organization=self.kwargs.get('parent_lookup_organization'))
 
     def get_serializer_class(self):
         return FilialSerializer
 
     def perform_create(self, serializer):
-        organization_id = self.kwargs.get('pk')
+        organization_id = self.kwargs.get('parent_lookup_organization')
         serializer.save(organization=Organization.objects.get(id=organization_id))
-
-
-class FilialView(generics.RetrieveUpdateDestroyAPIView):
-
-    def get_queryset(self):
-        return Filial.objects.filter(id=self.kwargs.get('pk'), organization=self.kwargs.get('pk2'))
-
-    def get_serializer_class(self):
-        return FilialSerializer

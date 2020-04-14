@@ -15,3 +15,4 @@ class FilialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filial
         fields = ('id', 'address', 'organization',)
+

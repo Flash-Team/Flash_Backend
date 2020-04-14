@@ -29,12 +29,18 @@ class OrdersViewSet(viewsets.ModelViewSet):
 
             return IsAdminUser(),
 
+        elif self.request.method in ('PUT', 'PATCH', 'DELETE'):
+            if self.request.user.role in (1, 2):
+                return IsAuthenticated(),
+
+            return IsAdminUser(),
+
         return IsAuthenticated(),
 
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)
 
-    @action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['post'])
     def rate(self, request, pk):
         """
         Rate all products in following order by value (between 0 and 5)
@@ -51,7 +57,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({'message': 'rated'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Rated'}, status=status.HTTP_200_OK)
 
 
 class ProductsViewSet(viewsets.ModelViewSet):

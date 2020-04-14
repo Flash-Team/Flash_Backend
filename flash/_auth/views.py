@@ -3,7 +3,7 @@ import json
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -61,6 +61,12 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return UsersSerializer
+
+    def get_permissions(self):
+        if self.request.user.role == 1:
+            return IsAuthenticated(),
+
+        return IsAdminUser(),
 
     def create(self, request, *args, **kwargs):
         return Response({'message': 'Not allowed create user here'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

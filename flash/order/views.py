@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -7,6 +9,8 @@ from flash.order.filters import DeliveredFilter
 from flash.order.models import Order, OrderedProduct
 from flash.order.serializers import BaseOrderSerializer, OrderRateSerializer, OrderProductsSerializer, \
     BaseProductSerializer
+
+LOG = logging.getLogger('info')
 
 
 class OrdersViewSet(viewsets.ModelViewSet):
@@ -38,7 +42,9 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return IsAuthenticated(),
 
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user)
+        order = serializer.save(client=self.request.user)
+
+        LOG.info('{} ordered by {}'.format(order, order.client))
 
     @action(detail=True, methods=['post'])
     def rate(self, request, pk):
@@ -56,6 +62,8 @@ class OrdersViewSet(viewsets.ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        LOG.info('{} delivered and rated for {}'.format(order, value))
 
         return Response({'message': 'Rated'}, status=status.HTTP_200_OK)
 

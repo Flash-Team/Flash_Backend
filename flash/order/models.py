@@ -10,6 +10,9 @@ from flash.product.models import Product
 class OrderManager(models.Manager):
 
     def for_user(self, user):
+        """
+        Filter orders according to user role
+        """
         if user.role == 1:
             return self.all()
 
@@ -51,6 +54,9 @@ class Order(models.Model):
         self.save()
 
     def calculate_price(self):
+        """
+        Calculate price of order by products
+        """
         price = 0
 
         for product in self.products.all():
@@ -61,6 +67,9 @@ class Order(models.Model):
         self.save()
 
     def rate(self, value):
+        """
+        Rate all products in order for value
+        """
         for product in self.products.all():
             product.product.sum += value
             product.product.count += 1
@@ -69,6 +78,9 @@ class Order(models.Model):
 
     @classmethod
     def create(cls, order_data, products):
+        """
+        Create order with products
+        """
         order = Order.objects.create(**order_data)
 
         order.save()

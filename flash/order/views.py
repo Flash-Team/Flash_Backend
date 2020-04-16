@@ -42,6 +42,9 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return IsAuthenticated(),
 
     def perform_create(self, serializer):
+        """
+        Set client of order to authorized user
+        """
         order = serializer.save(client=self.request.user)
 
         LOG.info('{} ordered by {}'.format(order, order.client))
@@ -77,22 +80,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
         return BaseProductSerializer
 
     def perform_create(self, serializer):
+        """
+        Use id of order in url
+        """
         order_id = self.kwargs.get('parent_lookup_order')
         order = Order.objects.get(id=order_id)
         serializer.save(order=order)
-
-        order.calculate_price()
-
-    def perform_update(self, serializer):
-        order_id = self.kwargs.get('parent_lookup_order')
-        order = Order.objects.get(id=order_id)
-        serializer.save(id=order_id)
-
-        order.calculate_price()
-
-    def perform_destroy(self, instance):
-        order_id = self.kwargs.get('parent_lookup_order')
-        order = Order.objects.get(id=order_id)
-        instance.delete()
-
-        order.calculate_price()

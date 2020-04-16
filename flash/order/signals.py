@@ -16,7 +16,7 @@ def find_courier(sender, instance, created, **kwargs):
 
         for user in MyUser.objects.all():
             # 4 - Courier role id
-            if user.role == 4:
+            if user.is_courier:
 
                 if not courier:
                     courier = user

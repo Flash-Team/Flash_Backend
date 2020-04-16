@@ -19,11 +19,11 @@ def register(request):
 
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
-        return JsonResponse(serializer.errors, status=400)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return HttpResponse(status=405)
+    return HttpResponse(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class PasswordView(APIView):
@@ -63,7 +63,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         return UsersSerializer
 
     def get_permissions(self):
-        if self.request.user.role == 1:
+        if self.request.user.is_admin:
             return IsAuthenticated(),
 
         return IsAdminUser(),

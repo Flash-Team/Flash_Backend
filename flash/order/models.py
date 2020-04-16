@@ -6,24 +6,23 @@ from flash.organization.models import Filial
 from flash.product.models import Product
 
 
-# Filter orders for all roles of user
 class OrderManager(models.Manager):
 
     def for_user(self, user):
         """
         Filter orders according to user role
         """
-        if user.role == 1:
+        if user.is_admin:
             return self.all()
 
         # Todo: check it!
-        elif user.role == 2:
+        elif user.is_manager:
             return self.filter(filial__organization__manager=user)
 
-        elif user.role == 3:
+        elif user.is_client:
             return self.filter(client=user)
 
-        elif user.role == 4:
+        elif user.is_courier:
             return self.filter(courier=user)
 
         return self.all()

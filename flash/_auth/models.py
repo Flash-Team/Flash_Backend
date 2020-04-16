@@ -57,6 +57,22 @@ class MyUser(MyAbstractUser):
 
         return ''
 
+    @property
+    def is_admin(self):
+        return self.role == 1
+
+    @property
+    def is_manager(self):
+        return self.role == 2
+
+    @property
+    def is_client(self):
+        return self.role == 3
+
+    @property
+    def is_courier(self):
+        return self.role == 4
+
     @classmethod
     def save_user(cls, data, password):
         user = cls.objects.create_user(**data)

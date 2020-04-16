@@ -14,7 +14,6 @@ LOG = logging.getLogger('info')
 
 
 class OrdersViewSet(viewsets.ModelViewSet):
-
     filter_backends = [DeliveredFilter, ]
 
     def get_queryset(self):
@@ -59,7 +58,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
         if order.delivered:
             return Response({'message': 'Order already rated'}, status=status.HTTP_400_BAD_REQUEST)
 
-        value = int(self.request.query_params.get('value'))
+        value = request.query_params.get("value")
 
         serializer = OrderRateSerializer(self.get_object(), data={'value': value})
 

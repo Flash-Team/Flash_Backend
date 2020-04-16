@@ -6,7 +6,7 @@ class DeliveredFilter(filters.BaseFilterBackend):
     Filter orders as delivered and not
     """
     def filter_queryset(self, request, queryset, view):
-        delivered = request.query_params.get('delivered')
+        delivered = request.query_params.get('delivered').capitalize()
 
         if delivered is not None and delivered in ('True', 'False'):
             queryset = queryset.filter(delivered=delivered)

@@ -9,25 +9,26 @@ from flash.organization.models import Organization, Filial
 from flash.product.models import Category, Product
 
 
-class OrdersTest(TestCase):
+class BaseOrdersTest(TestCase):
 
     DEFAULT_PASSWORD = 'qwe'
 
     def setUp(self):
-        # logging.disable(logging.CRITICAL)
+        logging.disable(logging.CRITICAL)
 
-        self._client = {
+        # Create client
+        self.client_json = {
             "username": "mebr0",
-            "password": "qwe",
             "first_name": "asd",
             "last_name": "qwe",
             "phone_number": "87475620211",
             "role": 3
         }
 
-        self.client.post('/auth/register/', self._client, content_type="application/json")
-        self.client.login(username=self._client['username'], password=self._client['password'])
+        self.user_client = MyUser.save_user(self.client_json, self.DEFAULT_PASSWORD)
+        self._login_client()
 
+        # Create courier
         courier_json = {
             'username': 'cour',
             'first_name': 'qwe',
@@ -38,6 +39,7 @@ class OrdersTest(TestCase):
 
         self.courier = MyUser.save_user(courier_json, self.DEFAULT_PASSWORD)
 
+        # Create manager
         manager_json = {
             'username': 'man',
             'first_name': 'qwe',
@@ -47,6 +49,8 @@ class OrdersTest(TestCase):
         }
 
         self.manager = MyUser.save_user(manager_json, self.DEFAULT_PASSWORD)
+
+        # Create other stuff
         self.organization = Organization.objects.create(name='Flash', description='Sth sth', logo='bla bla',
                                                         manager=self.manager)
         self.filial = Filial.objects.create(address='Radostovets 152', organization=self.organization)
@@ -55,6 +59,7 @@ class OrdersTest(TestCase):
         self.product = Product.objects.create(name='Burger', description='Very very delicious', logo='bla bla',
                                               price=100, organization=self.organization, category=self.category)
 
+        # Create order
         self.count = 2
         self.order_json = {
             'address': 'Radostovets st., 34',
@@ -68,6 +73,18 @@ class OrdersTest(TestCase):
         }
 
         self.client.post('/order/', self.order_json, content_type='application/json')
+
+    def _login_client(self):
+        self.assertTrue(self.client.login(username=self.user_client.username, password=self.DEFAULT_PASSWORD))
+
+    def _login_courier(self):
+        self.assertTrue(self.client.login(username=self.courier.username, password=self.DEFAULT_PASSWORD))
+
+    def _login_manager(self):
+        self.assertTrue(self.client.login(username=self.manager.username, password=self.DEFAULT_PASSWORD))
+
+
+class OrdersTest(BaseOrdersTest):
 
     def test_order_list(self):
         response = self.client.get('/order/')
@@ -84,7 +101,7 @@ class OrdersTest(TestCase):
         self.assertEqual(order.get('id'), 1)
         self.assertEqual(order.get('filial'), self.filial.id)
         self.assertEqual(order.get('address'), self.order_json.get('address'))
-        self.assertEqual(order.get('client').get('username'), self._client.get('username'))
+        self.assertEqual(order.get('client').get('username'), self.user_client.username)
         self.assertEqual(float(order.get('price')), self.product.price * self.count)
         self.assertEqual(order.get('delivered'), False)
         self.assertEqual(order.get('courier').get('username'), self.courier.username)
@@ -105,9 +122,7 @@ class OrdersTest(TestCase):
         self.assertTrue(response.data.get('detail'), 'Authentication credentials were not provided.')
 
     def test_order_create(self):
-        self.client.login(username=self._client['username'], password=self._client['password'])
-
-        # self.assertTrue(self.client.login(username=self._client.username, password=self.DEFAULT_PASSWORD))
+        self._login_client()
 
         count = 2
         order_json = {
@@ -130,7 +145,7 @@ class OrdersTest(TestCase):
         self.assertIsNotNone(data.get('id'))
         self.assertEqual(data.get('filial'), self.filial.id)
         self.assertEqual(data.get('address'), order_json.get('address'))
-        self.assertEqual(data.get('client').get('username'), self._client.get('username'))
+        self.assertEqual(data.get('client').get('username'), self.user_client.username)
         self.assertEqual(float(data.get('price')), self.product.price * count)
         self.assertEqual(data.get('delivered'), False)
         self.assertEqual(data.get('courier').get('username'), self.courier.username)
@@ -143,7 +158,7 @@ class OrdersTest(TestCase):
         self.assertEqual(data.get('products')[0].get('count'), count)
 
     def test_courier_order_create(self):
-        self.assertTrue(self.client.login(username=self.courier.username, password=self.DEFAULT_PASSWORD))
+        self._login_courier()
 
         count = 2
         order_json = {
@@ -174,27 +189,30 @@ class OrdersTest(TestCase):
         self.assertEqual(order.get('id'), 1)
         self.assertEqual(order.get('filial'), self.filial.id)
         self.assertEqual(order.get('address'), self.order_json.get('address'))
-        self.assertEqual(order.get('client').get('username'), self._client.get('username'))
+        self.assertEqual(order.get('client').get('username'), self.user_client.username)
         self.assertEqual(float(order.get('price')), self.product.price * self.count)
         self.assertEqual(order.get('delivered'), False)
         self.assertEqual(order.get('courier').get('username'), self.courier.username)
 
         self.assertIsNotNone(order.get('products'))
         self.assertEqual(len(order.get('products')), 1)
-        self.assertIsNotNone(order.get('products')[0].get('product'))
-        self.assertEqual(order.get('products')[0].get('product'), self.product.id)
-        self.assertIsNotNone(order.get('products')[0].get('count'))
-        self.assertEqual(order.get('products')[0].get('count'), self.count)
+
+        product = order.get('products')[0]
+
+        self.assertIsNotNone(product.get('product'))
+        self.assertEqual(product.get('product'), self.product.id)
+        self.assertIsNotNone(product.get('count'))
+        self.assertEqual(product.get('count'), self.count)
 
     def test_order_update(self):
-        self.assertTrue(self.client.login(username=self.manager.username, password=self.DEFAULT_PASSWORD))
+        self._login_manager()
 
         _id = 1
         order_json = {
             "address": "Radostovets st., 35",
-            "filial": self.filial.id,
-            "client": 1
+            "filial": self.filial.id
         }
+
         response = self.client.put(f'/order/{_id}/', order_json, content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
@@ -205,105 +223,48 @@ class OrdersTest(TestCase):
         self.assertEqual(order.get('id'), 1)
         self.assertEqual(order.get('filial'), self.filial.id)
         self.assertEqual(order.get('address'), order_json.get('address'))
-        self.assertEqual(order.get('client').get('username'), self._client.get('username'))
+        self.assertEqual(order.get('client').get('id'), self.user_client.id)
 
     def test_client_order_update(self):
-        self.client.login(username=self._client['username'], password=self._client['password'])
-
-        # self.assertTrue(self.client.login(username=self._client.username, password=self.DEFAULT_PASSWORD))
+        self._login_client()
 
         _id = 1
         order_json = {
             "address": "Radostovets st., 35",
             "filial": self.filial.id,
-            "client": 1
+            "client": self.user_client.id
         }
+
         response = self.client.put(f'/order/{_id}/', order_json, content_type='application/json')
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(response.data.get('detail', 'You do not have permission to perform this action.'))
 
     def test_order_delete(self):
-        # self.client.login(username=self._client['username'], password=self._client['password'])
-
-        self.assertTrue(self.client.login(username=self.manager.username, password=self.DEFAULT_PASSWORD))
+        self._login_manager()
 
         _id = 1
+
         response = self.client.delete(f'/order/{_id}/')
 
         self.assertEqual(response.status_code, 204)
 
     def test_courier_order_delete(self):
-        self.assertTrue(self.client.login(username=self.courier.username, password=self.DEFAULT_PASSWORD))
+        self._login_courier()
 
         _id = 1
+
         response = self.client.delete(f'/order/{_id}/')
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(response.data.get('detail', 'You do not have permission to perform this action.'))
 
 
-class ProductsTest(TestCase):
-
-    def setUp(self):
-        # logging.disable(logging.CRITICAL)
-
-        self._client = {
-            "username": "mebr0",
-            "password": "qwe",
-            "first_name": "asd",
-            "last_name": "qwe",
-            "phone_number": "87475620211",
-            "role": 3
-        }
-
-        self.client.post('/auth/register/', self._client, content_type="application/json")
-        self.client.login(username=self._client['username'], password=self._client['password'])
-
-        courier_json = {
-            'username': 'cour',
-            'first_name': 'qwe',
-            'last_name': 'qwe',
-            'phone_number': '12312312312',
-            'role': 4
-        }
-
-        self.courier = MyUser.save_user(courier_json, 'qwer')
-
-        manager_json = {
-            'username': 'man',
-            'first_name': 'qwe',
-            'last_name': 'qwe',
-            'phone_number': '12312312312',
-            'role': 2
-        }
-
-        self.manager = MyUser.save_user(manager_json, 'qwe')
-        self.organization = Organization.objects.create(name='Flash', description='Sth sth', logo='bla bla',
-                                                        manager=self.manager)
-        self.filial = Filial.objects.create(address='Radostovets 152', organization=self.organization)
-
-        self.category = Category.objects.create(name='Fast food')
-        self.product = Product.objects.create(name='Burger', description='Very very delicious', logo='bla bla',
-                                              price=100, organization=self.organization, category=self.category)
-
-        self.count = 2
-        self.order_json = {
-            'address': 'Radostovets st., 34',
-            'filial': self.filial.id,
-            'products': [
-                {
-                    'product': self.product.id,
-                    'count': self.count
-                }
-            ]
-        }
-
-        self.client.post('/order/', self.order_json, content_type='application/json')
+class ProductsTest(BaseOrdersTest):
 
     def test_product_list(self):
-        _id = 1
-        _product_id = 1
+        _id, _product_id = 1, 1
+
         response = self.client.get(f'/order/{_id}/product/')
 
         self.assertEqual(response.status_code, 200)
@@ -320,17 +281,16 @@ class ProductsTest(TestCase):
         self.assertEqual(product.get('count'), self.count)
 
     def test_product_create(self):
-        self.assertTrue(self.client.login(username=self.manager.username, password='qwe'))
+        self._login_manager()
 
-        _id = 1
-        count = 5
+        _id, new_product_count = 1, 5
 
         product_json = {
             "product": self.product.id,
-            "count": count
+            "count": new_product_count
         }
 
-        init_price = Order.objects.get(id=1).price
+        initial_price = Order.objects.get(id=1).price
 
         response = self.client.post(f'/order/{_id}/product/', product_json, content_type='application/json')
 
@@ -340,21 +300,20 @@ class ProductsTest(TestCase):
 
         self.assertEqual(product.get('id'), 2)
         self.assertEqual(product.get('product'), self.product.id)
-        self.assertEqual(product.get('count'), count)
+        self.assertEqual(product.get('count'), new_product_count)
 
         final_price = Order.objects.get(id=1).price
 
-        self.assertEqual(init_price + self.product.price * count, final_price)
+        self.assertEqual(initial_price + self.product.price * new_product_count, final_price)
 
     def test_client_create(self):
-        self.assertTrue(self.client.login(username=self._client.get('username'), password=self._client.get('password')))
+        self._login_client()
 
-        _id = 1
-        count = 5
+        _id, new_product_count = 1, 5
 
         product_json = {
             "product": self.product.id,
-            "count": count
+            "count": new_product_count
         }
 
         response = self.client.post(f'/order/{_id}/product/', product_json, content_type='application/json')
@@ -363,8 +322,8 @@ class ProductsTest(TestCase):
         self.assertTrue(response.data.get('detail', 'You do not have permission to perform this action.'))
 
     def test_product_retrieve(self):
-        _id = 1
-        _product_id = 1
+        _id, _product_id = 1, 1
+
         response = self.client.get(f'/order/{_id}/product/{_product_id}/')
 
         self.assertEqual(response.status_code, 200)
@@ -378,26 +337,24 @@ class ProductsTest(TestCase):
     def test_unauthorized_product_retrieve(self):
         self.client.logout()
 
-        _id = 1
-        _product_id = 1
+        _id, _product_id = 1, 1
+
         response = self.client.get(f'/order/{_id}/product/{_product_id}/')
 
         self.assertEqual(response.status_code, 401)
         self.assertTrue(response.data.get('detail'), 'Authentication credentials were not provided.')
 
     def test_product_update(self):
-        self.assertTrue(self.client.login(username=self.manager.username, password='qwe'))
+        self._login_manager()
 
-        _id = 1
-        _product_id = 1
-        count = 6
+        _id, _product_id, updated_count = 1, 1, 6
 
         product_json = {
             "product": self.product.id,
-            "count": count
+            "count": updated_count
         }
 
-        init_price = Order.objects.get(id=_product_id).price
+        initial_price = Order.objects.get(id=_product_id).price
 
         response = self.client.put(f'/order/{_id}/product/{_product_id}/', product_json,
                                    content_type='application/json')
@@ -405,26 +362,25 @@ class ProductsTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         product = response.data
-        self.assertTrue(self.client.login(username=self._client.get('username'), password=self._client.get('password')))
+
+        self._login_client()
 
         self.assertEqual(product.get('id'), 1)
         self.assertEqual(product.get('product'), self.product.id)
-        self.assertEqual(product.get('count'), count)
+        self.assertEqual(product.get('count'), updated_count)
 
         final_price = Order.objects.get(id=_product_id).price
 
-        self.assertEqual(init_price + self.product.price * (count - self.count), final_price)
+        self.assertEqual(initial_price + self.product.price * (updated_count - self.count), final_price)
 
     def test_courier_product_update(self):
-        self.assertTrue(self.client.login(username=self.courier.username, password='qwer'))
+        self._login_courier()
 
-        _id = 1
-        _product_id = 1
-        count = 6
+        _id, _product_id, updated_count = 1, 1, 6
 
         product_json = {
             "product": self.product.id,
-            "count": count
+            "count": updated_count
         }
 
         response = self.client.put(f'/order/{_id}/product/{_product_id}/', product_json,
@@ -434,12 +390,11 @@ class ProductsTest(TestCase):
         self.assertTrue(response.data.get('detail', 'You do not have permission to perform this action.'))
 
     def test_product_delete(self):
-        self.assertTrue(self.client.login(username=self.manager.username, password='qwe'))
+        self._login_manager()
 
-        _id = 1
-        _product_id = 1
+        _id, _product_id = 1, 1
 
-        init_price = Order.objects.get(id=_product_id).price
+        initial_price = Order.objects.get(id=_product_id).price
 
         response = self.client.delete(f'/order/{_id}/product/{_product_id}/')
 
@@ -447,16 +402,14 @@ class ProductsTest(TestCase):
 
         final_price = Order.objects.get(id=_product_id).price
 
-        self.assertEqual(init_price - self.product.price * self.count, final_price)
+        self.assertEqual(initial_price - self.product.price * self.count, final_price)
 
     def test_client_product_delete(self):
-        self.assertTrue(self.client.login(username=self._client.get('username'), password=self._client.get('password')))
+        self._login_client()
 
-        _id = 1
-        _product_id = 1
+        _id, _product_id = 1, 1
 
         response = self.client.delete(f'/order/{_id}/product/{_product_id}/')
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(response.data.get('detail', 'You do not have permission to perform this action.'))
-

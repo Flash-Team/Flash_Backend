@@ -3,13 +3,17 @@ import logging
 
 from django.test import TestCase
 
+from flash._auth.models import MyUser
 
-class AuthTest(TestCase):
+
+class BaseAuthTest(TestCase):
+
+    DEFAULT_PASSWORD = 'qwe'
 
     def setUp(self):
         logging.disable(logging.CRITICAL)
 
-        self.user = {
+        self.json_user = {
             "username": "mebr0",
             "password": "qwe",
             "first_name": "asd",
@@ -18,7 +22,16 @@ class AuthTest(TestCase):
             "role": 1
         }
 
-        self.client.post("/auth/register/", self.user, content_type="application/json")
+        self.user = MyUser.save_user(self.json_user, self.DEFAULT_PASSWORD)
+
+    def _login(self, password=None):
+        if password:
+            self.assertTrue(self.client.login(username=self.user.username, password=password))
+        else:
+            self.assertTrue(self.client.login(username=self.user.username, password=self.DEFAULT_PASSWORD))
+
+
+class AuthTest(BaseAuthTest):
 
     def test_register(self):
         user = {
@@ -44,21 +57,22 @@ class AuthTest(TestCase):
         self.assertFalse(data.get("is_superuser"))
 
     def test_already_register(self):
-        response = self.client.post("/auth/register/", self.user, content_type="application/json")
+        response = self.client.post("/auth/register/", self.json_user, content_type="application/json")
 
         self.assertEqual(response.status_code, 400)
+
         data = json.loads(response.content)
+
         self.assertEqual(data.get('username')[0], 'User with this username already exists.')
 
     def test_login(self):
-        response = self.client.post('/auth/login/', self.user)
+        response = self.client.post('/auth/login/', self.json_user)
 
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.data.get('token'))
 
     def test_wrong_login(self):
-        # change user's password
-        user = self.user
+        user = self.json_user
         user['password'] = user['password'] + '1'
 
         response = self.client.post('/auth/login/', user)
@@ -67,25 +81,14 @@ class AuthTest(TestCase):
         self.assertEqual(response.data.get('non_field_errors')[0], 'Unable to log in with provided credentials.')
 
 
-class ChangePasswordTest(TestCase):
+class ChangePasswordTest(BaseAuthTest):
 
     def setUp(self):
-        logging.disable(logging.CRITICAL)
-
-        self.user = {
-            "username": "mebr0",
-            "password": "qwe",
-            "first_name": "asd",
-            "last_name": "qwe",
-            "phone_number": "87475620211",
-            "role": 1
-        }
-
-        self.client.post('/auth/register/', self.user, content_type="application/json")
-        self.client.login(username=self.user['username'], password=self.user['password'])
+        super().setUp()
+        self._login()
 
     def test_change_password(self):
-        new_password = self.user.get('password') + '1'
+        new_password = self.user.password + '1'
         request = {
             "password": new_password
         }
@@ -95,19 +98,7 @@ class ChangePasswordTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.get('message'), 'Password changed')
 
-        result = self.client.login(username=self.user.get('username'), password=new_password)
-
-        self.assertTrue(result)
-
-    def test_drop_password(self):
-        response = self.client.delete('/auth/password/', content_type="application/json")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data.get('message'), 'Default password set')
-
-        result = self.client.login(username=self.user.get('username'), password='qwe')
-
-        self.assertTrue(result)
+        self._login(new_password)
 
     def test_unauthorized_change_password(self):
         self.client.logout()
@@ -121,6 +112,14 @@ class ChangePasswordTest(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data.get('detail'), 'Authentication credentials were not provided.')
 
+    def test_drop_password(self):
+        response = self.client.delete('/auth/password/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data.get('message'), 'Default password set')
+
+        self._login()
+
     def test_unauthorized_drop_password(self):
         self.client.logout()
 
@@ -130,43 +129,32 @@ class ChangePasswordTest(TestCase):
         self.assertEqual(response.data.get('detail'), 'Authentication credentials were not provided.')
 
 
-class UsersTest(TestCase):
+class UsersTest(BaseAuthTest):
 
     def setUp(self):
-        logging.disable(logging.CRITICAL)
-
-        self.user = {
-            "username": "mebr0",
-            "password": "qwe",
-            "first_name": "asd",
-            "last_name": "qwe",
-            "phone_number": "87475620211",
-            "role": 1
-        }
-
-        self.client.post('/auth/register/', self.user, content_type="application/json")
-        self.client.login(username=self.user['username'], password=self.user['password'])
+        super().setUp()
+        self._login()
 
     def test_user_list(self):
         response = self.client.get('/auth/user/')
 
         self.assertEqual(response.status_code, 200)
 
-        todo_list = response.data
+        user_list = response.data
 
-        self.assertIsNotNone(todo_list)
-        self.assertEqual(len(todo_list), 1)
+        self.assertIsNotNone(user_list)
+        self.assertEqual(len(user_list), 1)
 
-        _list = todo_list[0]
+        user = user_list[0]
 
-        self.assertEqual(_list.get('id'), 1)
-        self.assertEqual(_list.get('username'), self.user.get('username'))
-        self.assertIsNone(_list.get("password"))
-        self.assertEqual(_list.get('first_name'), self.user.get('first_name'))
-        self.assertEqual(_list.get('last_name'), self.user.get('last_name'))
-        self.assertEqual(_list.get('phone_number'), self.user.get('phone_number'))
-        self.assertEqual(_list.get('role'), self.user.get('role'))
-        self.assertFalse(_list.get("is_superuser"))
+        self.assertEqual(user.get('id'), 1)
+        self.assertEqual(user.get('username'), self.user.username)
+        self.assertIsNone(user.get("password"))
+        self.assertEqual(user.get('first_name'), self.user.first_name)
+        self.assertEqual(user.get('last_name'), self.user.last_name)
+        self.assertEqual(user.get('phone_number'), self.user.phone_number)
+        self.assertEqual(user.get('role'), self.user.role)
+        self.assertFalse(user.get("is_superuser"))
 
     def test_user_create(self):
         response = self.client.post('/auth/user/', {}, content_type='application/json')
@@ -176,39 +164,41 @@ class UsersTest(TestCase):
 
     def test_user_retrieve(self):
         _id = 1
+
         response = self.client.get(f'/auth/user/{_id}/')
 
         self.assertEqual(response.status_code, 200)
 
-        _list = response.data
+        user = response.data
 
-        self.assertEqual(_list.get('id'), 1)
-        self.assertEqual(_list.get('username'), self.user.get('username'))
-        self.assertIsNone(_list.get("password"))
-        self.assertEqual(_list.get('first_name'), self.user.get('first_name'))
-        self.assertEqual(_list.get('last_name'), self.user.get('last_name'))
-        self.assertEqual(_list.get('phone_number'), self.user.get('phone_number'))
-        self.assertEqual(_list.get('role'), self.user.get('role'))
-        self.assertFalse(_list.get("is_superuser"))
+        self.assertEqual(user.get('id'), 1)
+        self.assertEqual(user.get('username'), self.user.username)
+        self.assertIsNone(user.get("password"))
+        self.assertEqual(user.get('first_name'), self.user.first_name)
+        self.assertEqual(user.get('last_name'), self.user.last_name)
+        self.assertEqual(user.get('phone_number'), self.user.phone_number)
+        self.assertEqual(user.get('role'), self.user.role)
+        self.assertFalse(user.get("is_superuser"))
 
     def test_user_update(self):
-        user = self.user
+        user = self.json_user
         _id = 1
         user['first_name'] = user['first_name'] + 'a'
+
         response = self.client.put(f'/auth/user/{_id}/', user, content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
 
-        _list = response.data
+        user = response.data
 
-        self.assertEqual(_list.get('id'), 1)
-        self.assertEqual(_list.get('username'), user.get('username'))
-        self.assertIsNone(_list.get("password"))
-        self.assertEqual(_list.get('first_name'), user.get('first_name'))
-        self.assertEqual(_list.get('last_name'), user.get('last_name'))
-        self.assertEqual(_list.get('phone_number'), user.get('phone_number'))
-        self.assertEqual(_list.get('role'), user.get('role'))
-        self.assertFalse(_list.get("is_superuser"))
+        self.assertEqual(user.get('id'), 1)
+        self.assertEqual(user.get('username'), user.get('username'))
+        self.assertIsNone(user.get("password"))
+        self.assertEqual(user.get('first_name'), user.get('first_name'))
+        self.assertEqual(user.get('last_name'), user.get('last_name'))
+        self.assertEqual(user.get('phone_number'), user.get('phone_number'))
+        self.assertEqual(user.get('role'), user.get('role'))
+        self.assertFalse(user.get("is_superuser"))
 
     def test_user_create_and_delete(self):
         user = {

@@ -15,13 +15,13 @@ class OrderManager(models.Manager):
 
         # Todo: check it!
         elif user.role == 2:
-            return self.filter(filial__organization__manager=user)
+            return self.select_related('filial__organization__manager').filter(filial__organization__manager=user)
 
         elif user.role == 3:
-            return self.filter(client=user)
+            return self.select_related('client').filter(client=user)
 
         elif user.role == 4:
-            return self.filter(courier=user)
+            return self.select_related('courier').filter(courier=user)
 
         return self.all()
 
@@ -98,13 +98,14 @@ class ProductManager(models.Manager):
 
         # Todo: check it!
         elif user.role == 2:
-            return self.filter(product__organization__manager=user)
+            return self.select_related('order', 'product__organization__manager').\
+                filter(product__organization__manager=user)
 
         elif user.role == 3:
-            return self.filter(order__client=user)
+            return self.select_related('order', 'order__client').filter(order__client=user)
 
         elif user.role == 4:
-            return self.filter(order__courier=user)
+            return self.select_related('order', 'order__courier').filter(order__courier=user)
 
         return self.all()
 

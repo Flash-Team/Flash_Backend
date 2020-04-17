@@ -27,6 +27,9 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return BaseOrderSerializer
 
     def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return IsAuthenticated(),
+
         if self.request.method == 'POST':
             if self.request.user.role in (1, 3):
                 return IsAuthenticated(),
@@ -77,6 +80,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
         return BaseProductSerializer
 
     def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return IsAuthenticated(),
+
         if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
             if self.request.user.role in (1, 2):
                 return IsAuthenticated(),

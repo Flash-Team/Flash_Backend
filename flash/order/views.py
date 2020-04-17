@@ -71,10 +71,19 @@ class OrdersViewSet(viewsets.ModelViewSet):
 class ProductsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
-        return OrderedProduct.objects.filter(order=self.kwargs.get('parent_lookup_order'))
+        return OrderedProduct.objects.for_user(self.request.user).filter(order=self.kwargs.get('parent_lookup_order'))
 
     def get_serializer_class(self):
         return BaseProductSerializer
+
+    def get_permissions(self):
+        if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
+            if self.request.user.role in (1, 2):
+                return IsAuthenticated(),
+
+            return IsAdminUser(),
+
+        return IsAuthenticated(),
 
     def perform_create(self, serializer):
         order_id = self.kwargs.get('parent_lookup_order')

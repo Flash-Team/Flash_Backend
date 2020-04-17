@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, User
 from django.db import models
-from django.utils import timezone
 
 
 class MyAbstractUser(AbstractBaseUser, PermissionsMixin):
@@ -11,7 +10,7 @@ class MyAbstractUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(auto_now=True)
     phone_number = models.CharField(max_length=11)
 
     objects = UserManager()
@@ -48,7 +47,31 @@ class MyUser(MyAbstractUser):
 
     @property
     def done_orders(self):
-        return self.orders.filter(delivered=False)
+        return self.orders.filter(delivered=True)
+
+    @property
+    def text_role(self):
+        for pair in self.USER_ROLES:
+            if pair[0] == self.role:
+                return pair[1]
+
+        return ''
+
+    @property
+    def is_admin(self):
+        return self.role == 1
+
+    @property
+    def is_manager(self):
+        return self.role == 2
+
+    @property
+    def is_client(self):
+        return self.role == 3
+
+    @property
+    def is_courier(self):
+        return self.role == 4
 
     @classmethod
     def save_user(cls, data, password):

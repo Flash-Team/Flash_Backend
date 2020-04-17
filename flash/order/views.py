@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from flash.order.filters import DeliveredFilter
 from flash.order.models import Order, OrderedProduct
+from flash.order.permissions import IsClient
 from flash.order.serializers import BaseOrderSerializer, OrderRateSerializer, OrderProductsSerializer, \
     BaseProductSerializer
 
@@ -14,7 +15,6 @@ LOG = logging.getLogger('info')
 
 
 class OrdersViewSet(viewsets.ModelViewSet):
-
     filter_backends = [DeliveredFilter, ]
 
     def get_queryset(self):
@@ -27,17 +27,23 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return BaseOrderSerializer
 
     def get_permissions(self):
-        if self.request.user.is_anonymous:
+        user = self.request.user
+        
+        if user.is_anonymous:
             return IsAuthenticated(),
 
-        if self.request.method == 'POST':
-            if self.request.user.role in (1, 3):
+        if self.action == 'create':
+            if user.is_admin or user.is_client:
                 return IsAuthenticated(),
 
             return IsAdminUser(),
 
-        elif self.request.method in ('PUT', 'PATCH', 'DELETE'):
-            if self.request.user.role in (1, 2):
+        elif self.action == 'rate':
+            if user.is_client:
+                return IsClient(),
+
+        elif self.action in ('update', 'partial_update', 'destroy'):
+            if user.is_admin or user.is_manager:
                 return IsAuthenticated(),
 
             return IsAdminUser(),
@@ -45,12 +51,17 @@ class OrdersViewSet(viewsets.ModelViewSet):
         return IsAuthenticated(),
 
     def perform_create(self, serializer):
+        """
+        Set client of order to authorized user
+        """
         order = serializer.save(client=self.request.user)
 
         LOG.info('{} ordered by {}'.format(order, order.client))
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=(IsAdminUser,))
     def rate(self, request, pk):
+        # self.permission_classes = IsAdminUser(),
+
         """
         Rate all products in following order by value (between 0 and 5)
         """
@@ -59,7 +70,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
         if order.delivered:
             return Response({'message': 'Order already rated'}, status=status.HTTP_400_BAD_REQUEST)
 
-        value = int(self.request.query_params.get('value'))
+        value = request.query_params.get("value")
 
         serializer = OrderRateSerializer(self.get_object(), data={'value': value})
 
@@ -92,22 +103,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
         return IsAuthenticated(),
 
     def perform_create(self, serializer):
+        """
+        Use id of order in url
+        """
         order_id = self.kwargs.get('parent_lookup_order')
         order = Order.objects.get(id=order_id)
         serializer.save(order=order)
-
-        order.calculate_price()
-
-    def perform_update(self, serializer):
-        order_id = self.kwargs.get('parent_lookup_order')
-        order = Order.objects.get(id=order_id)
-        serializer.save(id=order_id)
-
-        order.calculate_price()
-
-    def perform_destroy(self, instance):
-        order_id = self.kwargs.get('parent_lookup_order')
-        order = Order.objects.get(id=order_id)
-        instance.delete()
-
-        order.calculate_price()

@@ -51,6 +51,9 @@ class ProductSerializer(BaseProductSerializer):
 
 
 class OrderRateSerializer(serializers.Serializer):
+    """
+    Serializer for rating products in order for rating value
+    """
 
     value = serializers.IntegerField(validators=[rating_validator])
 
@@ -64,7 +67,7 @@ class OrderRateSerializer(serializers.Serializer):
         """
         Update each product in order, add value of rating and increase number of rates by 1
         """
-        instance.rate(int(validated_data.get('value')))
+        instance.rate(validated_data.get('value'))
 
         instance.complete()
 

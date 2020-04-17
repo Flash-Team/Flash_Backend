@@ -11,4 +11,4 @@ class Organization(BaseProduct):
 
 class Filial(models.Model):
     address = models.CharField(max_length=100)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organizations')

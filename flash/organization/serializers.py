@@ -25,10 +25,6 @@ class OrganizationRateSerializer(serializers.Serializer):
         pass
 
     def update(self, instance, validated_data):
-        for organization in instance.organizations.all():
-            organization.organization.sum += validated_data['value']
-            organization.organization.count += 1
-
-            organization.organization.save()
+        instance.rate(validated_data.get('value'))
 
         return instance

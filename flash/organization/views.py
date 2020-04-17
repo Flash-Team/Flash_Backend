@@ -14,9 +14,9 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return OrganizationSerializer
 
-    @action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['patch'],)
     def rate(self, request, pk):
-        value = int(self.request.query_params.get('value'))
+        value = request.query_params.get('value')
 
         serializer = OrganizationRateSerializer(self.get_object(), data={'value': value})
 

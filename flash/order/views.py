@@ -13,7 +13,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
     filter_backends = [OrderFilter, ]
 
     def get_queryset(self):
-        return Order.objects.all()
+        return Order.objects.for_user(self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

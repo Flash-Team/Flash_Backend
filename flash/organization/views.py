@@ -1,3 +1,4 @@
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -13,6 +14,18 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return OrganizationSerializer
+
+    # def get_permissions(self):
+    #     if self.request.method == 'POST':
+    #         if self.request.user.role in (1, 2):
+    #             return IsAuthenticated(),
+    #
+    #         return IsAdminUser(),
+    #
+    #     return IsAuthenticated(),
+
+    def perform_create(self, serializer):
+        serializer.save(manager=self.request.user)
 
     @action(detail=True, methods=['patch'],)
     def rate(self, request, pk):

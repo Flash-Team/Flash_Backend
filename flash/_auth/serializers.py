@@ -19,7 +19,6 @@ def wrong_role(value):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-
     password = serializers.CharField(write_only=True)
     role = serializers.IntegerField(validators=[wrong_role])
 
@@ -40,7 +39,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
-
     username = serializers.CharField(read_only=True)
     password = serializers.CharField(write_only=True)
 
@@ -64,7 +62,6 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class CourierSerializer(UsersSerializer):
-
     role = serializers.IntegerField(write_only=True, validators=[courier_role_validator])
 
     class Meta(UsersSerializer.Meta):
@@ -72,8 +69,8 @@ class CourierSerializer(UsersSerializer):
 
 
 class ClientSerializer(UsersSerializer):
-
     role = serializers.IntegerField(write_only=True, validators=[client_role_validator])
 
     class Meta(UsersSerializer.Meta):
         fields = ('id', 'username', 'first_name', 'last_name', 'role',)
+

@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from flash.product.models import Category, Product
-from flash.product.serializers import CategorySerializer, Product2Serializer
+from flash.product.serializers import CategorySerializer, ProductSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -19,7 +19,7 @@ class ProductsListViewSet(viewsets.ModelViewSet):
         return Product.objects.filter(category=self.kwargs.get('parent_lookup_category'))
 
     def get_serializer_class(self):
-        return Product2Serializer
+        return ProductSerializer
 
     def perform_create(self, serializer):
         category_id = self.kwargs.get('parent_lookup_category')

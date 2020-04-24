@@ -63,6 +63,9 @@ class UsersViewSet(viewsets.ModelViewSet):
         return UsersSerializer
 
     def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return IsAuthenticated(),
+          
         if self.request.user.is_admin:
             return IsAuthenticated(),
 

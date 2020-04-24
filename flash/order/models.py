@@ -17,13 +17,13 @@ class OrderManager(models.Manager):
 
         # Todo: check it!
         elif user.is_manager:
-            return self.filter(filial__organization__manager=user)
+            return self.select_related('filial__organization__manager').filter(filial__organization__manager=user)
 
         elif user.is_client:
-            return self.filter(client=user)
+            return self.select_related('client').filter(client=user)
 
         elif user.is_courier:
-            return self.filter(courier=user)
+            return self.select_related('courier').filter(courier=user)
 
         return self.all()
 
@@ -101,11 +101,33 @@ class Order(models.Model):
         return '{} [price: {}, address: {}]'.format('Order', self.price, self.address)
 
 
+class ProductManager(models.Manager):
+
+    def for_user(self, user):
+        if user.role == 1:
+            return self.all()
+
+        # Todo: check it!
+        elif user.role == 2:
+            return self.select_related('order', 'product__organization__manager').\
+                filter(product__organization__manager=user)
+
+        elif user.role == 3:
+            return self.select_related('order', 'order__client').filter(order__client=user)
+
+        elif user.role == 4:
+            return self.select_related('order', 'order__courier').filter(order__courier=user)
+
+        return self.all()
+
+
 class OrderedProduct(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
     count = models.IntegerField(default=1)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='products')
+
+    objects = ProductManager()
 
     @property
     def price(self):

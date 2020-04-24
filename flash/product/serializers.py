@@ -14,7 +14,7 @@ class NestedProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'description', 'logo', 'price', 'organization',)
+        fields = ('id', 'logo', 'name', 'description', 'price', 'organization',)
 
 
 class ProductSerializer(NestedProductSerializer):

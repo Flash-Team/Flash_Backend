@@ -7,7 +7,7 @@ from flash.organization.validators import rating_validator
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'description', 'logo',)
+        fields = ('id', 'name', 'description', 'logo', 'manager', )
 
 
 class NestedFilialSerializer(serializers.ModelSerializer):

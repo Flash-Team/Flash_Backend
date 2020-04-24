@@ -15,19 +15,10 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return OrganizationSerializer
 
-    # def get_permissions(self):
-    #     if self.request.method == 'POST':
-    #         if self.request.user.role in (1, 2):
-    #             return IsAuthenticated(),
-    #
-    #         return IsAdminUser(),
-    #
-    #     return IsAuthenticated(),
-
     def perform_create(self, serializer):
         serializer.save(manager=self.request.user)
 
-    @action(detail=True, methods=['patch'],)
+    @action(detail=True, methods=['patch'], )
     def rate(self, request, pk):
         value = request.query_params.get('value')
 

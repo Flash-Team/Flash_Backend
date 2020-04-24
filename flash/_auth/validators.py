@@ -13,3 +13,6 @@ def client_role_validator(value):
         raise serializers.ValidationError('User role is not client')
 
 
+def manager_role_validator(value):
+    if value != 2:
+        raise serializers.ValidationError('User role is not manager')

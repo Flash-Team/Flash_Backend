@@ -2,9 +2,8 @@ from rest_framework import serializers
 
 from flash._auth.models import MyUser
 
-
 # Indeed not necessary because Django's native validator
-from flash._auth.validators import courier_role_validator, client_role_validator
+from flash._auth.validators import courier_role_validator, client_role_validator, manager_role_validator
 
 
 def wrong_role(value):
@@ -74,3 +73,9 @@ class ClientSerializer(UsersSerializer):
     class Meta(UsersSerializer.Meta):
         fields = ('id', 'username', 'first_name', 'last_name', 'role',)
 
+
+class ManagerSerializer(UsersSerializer):
+    role = serializers.IntegerField(write_only=True, validators=[manager_role_validator])
+
+    class Meta(UsersSerializer.Meta):
+        fields = ('id', 'username', 'first_name', 'last_name', 'role',)

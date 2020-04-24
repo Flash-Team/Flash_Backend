@@ -14,7 +14,7 @@ class Category(models.Model):
         verbose_name_plural = 'Categories'
 
     def __str__(self):
-        return '{} [name: {}]'.format('Category', self.name)
+        return self.name
 
 
 class Product(BaseProduct):

@@ -5,7 +5,7 @@ from flash.organization.models import Organization, Filial
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'rating', 'manager',)
+    list_display = ('id', 'name', 'logo', 'rating', 'manager',)
 
 
 @admin.register(Filial)

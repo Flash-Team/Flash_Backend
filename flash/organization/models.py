@@ -6,10 +6,18 @@ from flash.organization.validators import validate_file_size, validate_extension
 from flash.product.bases import BaseProduct
 
 
+class OrganizationFilialManager(models.Manager):
+
+    def for_user(self, user):
+        return self.filter(manager=user)
+
+
 class Organization(BaseProduct):
     logo = models.FileField(upload_to='organizations_logo', null=True, blank=True, validators=[validate_file_size,
                                                                                                validate_extension, ])
     manager = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='organizations')
+
+    objects = OrganizationFilialManager()
 
     def rate(self, value):
         self.sum += value

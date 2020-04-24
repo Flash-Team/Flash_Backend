@@ -156,3 +156,6 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_AUTH_COOKIE': None,
 }
+
+MEDIA_URL = '/logo/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'logo')

@@ -2,6 +2,7 @@ from django.db import models
 
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
+from flash.organization.validators import validate_file_size, validate_extension
 from flash.product.bases import BaseProduct
 
 
@@ -12,7 +13,9 @@ class OrganizationManager(models.Manager):
 
 
 class Organization(BaseProduct):
-    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    logo = models.FileField(upload_to='organizations_logo', null=True, blank=True, validators=[validate_file_size,
+                                                                                               validate_extension, ])
+    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='organizations')
 
     objects = OrganizationManager()
 
@@ -27,7 +30,7 @@ class Organization(BaseProduct):
 
 class Filial(models.Model):
     address = models.CharField(max_length=100)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='organizations')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='filials')
 
     def __str__(self):
         return '{} [address: {}, organization: {}]'.format('Filial', self.address, self.organization)

@@ -17,8 +17,3 @@ def validate_extension(value):
         ext = split_ext[1]
         if not ext.lower() in ALLOWED_EXTENSIONS:
             raise ValidationError(f'File extension error! Valid extensions are: {ALLOWED_EXTENSIONS}')
-
-
-def rating_validator(value):
-    if value > 5 or value <= 0:
-        raise serializers.ValidationError('Invalid rating value')

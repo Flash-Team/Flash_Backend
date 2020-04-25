@@ -1,10 +1,13 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from flash.product.models import Category, Product
-from flash.product.serializers import CategorySerializer, ProductSerializer
+from flash.product.serializers import CategorySerializer, ProductSerializer, NestedProductSerializer
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
+
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         return Category.objects.all()
@@ -14,12 +17,16 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
 
 class ProductsListViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Product.objects.filter(category=self.kwargs.get('parent_lookup_category'))
 
     def get_serializer_class(self):
-        return ProductSerializer
+        if self.request.method in ('POST', 'GET'):
+            return ProductSerializer
+
+        return NestedProductSerializer
 
     def perform_create(self, serializer):
         category_id = self.kwargs.get('parent_lookup_category')

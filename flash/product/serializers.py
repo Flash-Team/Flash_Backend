@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-from flash.organization.serializers import OrganizationSerializer
 from flash.product.models import Category, Product
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Category
         fields = ('id', 'name',)

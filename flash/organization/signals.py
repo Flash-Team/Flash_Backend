@@ -13,9 +13,8 @@ def organization_created(sender, instance, created, **kwargs):
     Creates filial with empty information,
     when Organization object is created
     """
-
     if created:
-        Filial.objects.create(name='Filials of organization', organization=instance)
+        Filial.objects.create(address='Empty address', organization=instance)
 
 
 @receiver(post_delete, sender=Organization)

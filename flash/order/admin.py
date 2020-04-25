@@ -2,7 +2,6 @@ from django.contrib import admin
 from flash.order.models import Order, OrderedProduct
 
 
-# Need to add filial to list_display
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'price', 'filial', 'client', 'courier', 'created_at', 'delivered',)

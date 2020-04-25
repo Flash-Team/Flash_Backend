@@ -10,10 +10,16 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name',)
 
 
-class Product2Serializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    organization = OrganizationSerializer(read_only=True)
+class NestedProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'description', 'logo', 'price', 'organization', 'category',)
+        fields = ('id', 'name', 'description', 'logo', 'price', 'organization',)
+
+
+class ProductSerializer(NestedProductSerializer):
+    category = CategorySerializer(read_only=True)
+
+    class Meta(NestedProductSerializer.Meta):
+        fields = NestedProductSerializer.Meta.fields + ('category',)
+

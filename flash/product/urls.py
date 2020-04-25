@@ -1,10 +1,12 @@
-from django.urls import path
+from rest_framework_extensions.routers import ExtendedSimpleRouter
 
-from flash.product.views import CategoriesView, CategoryView, ProductsListView, ProductListView
+from flash.product.views import CategoriesViewSet, ProductsListViewSet
 
-urlpatterns = [
-    path('', CategoriesView.as_view()),
-    path('<int:pk>/', CategoryView.as_view()),
-    path('<int:pk>/product/', ProductsListView.as_view()),
-    path('<int:pk2>/product/<int:pk>/', ProductListView.as_view()),
-]
+router = ExtendedSimpleRouter()
+
+(
+    router.register('', CategoriesViewSet, basename='category').
+    register(r'product', ProductsListViewSet, basename='product', parents_query_lookups=['category'])
+)
+
+urlpatterns = router.urls

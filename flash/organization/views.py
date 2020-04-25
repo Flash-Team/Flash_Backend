@@ -1,19 +1,13 @@
-from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 
 from flash.organization.models import Organization, Filial
-from flash.organization.serializers import OrganizationSerializer, FilialSerializer
+from flash.organization.serializers import OrganizationSerializer, FilialSerializer, OrganizationRateSerializer
 
 
-class OrganizationsView(generics.ListCreateAPIView):
-
-    def get_queryset(self):
-        return Organization.objects.all()
-
-    def get_serializer_class(self):
-        return OrganizationSerializer
-
-
-class OrganizationView(generics.RetrieveUpdateDestroyAPIView):
+class OrganizationsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Organization.objects.all()
@@ -21,24 +15,38 @@ class OrganizationView(generics.RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self):
         return OrganizationSerializer
 
+    # def get_permissions(self):
+    #     if self.request.method == 'POST':
+    #         if self.request.user.role in (1, 2):
+    #             return IsAuthenticated(),
+    #
+    #         return IsAdminUser(),
+    #
+    #     return IsAuthenticated(),
 
-class FilialsView(generics.ListCreateAPIView):
+    def perform_create(self, serializer):
+        serializer.save(manager=self.request.user)
+
+    @action(detail=True, methods=['patch'],)
+    def rate(self, request, pk):
+        value = request.query_params.get('value')
+
+        serializer = OrganizationRateSerializer(self.get_object(), data={'value': value})
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'message': 'rated'}, status=status.HTTP_200_OK)
+
+
+class FilialsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
-        return Filial.objects.filter(organization=self.kwargs.get('pk'))
+        return Filial.objects.filter(organization=self.kwargs.get('parent_lookup_organization'))
 
     def get_serializer_class(self):
         return FilialSerializer
 
     def perform_create(self, serializer):
-        organization_id = self.kwargs.get('pk')
+        organization_id = self.kwargs.get('parent_lookup_organization')
         serializer.save(organization=Organization.objects.get(id=organization_id))
-
-
-class FilialView(generics.RetrieveUpdateDestroyAPIView):
-
-    def get_queryset(self):
-        return Filial.objects.filter(id=self.kwargs.get('pk'), organization=self.kwargs.get('pk2'))
-
-    def get_serializer_class(self):
-        return FilialSerializer

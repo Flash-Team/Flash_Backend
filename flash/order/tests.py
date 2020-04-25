@@ -14,7 +14,7 @@ class BaseOrdersTest(TestCase):
     DEFAULT_PASSWORD = 'qwe'
 
     def setUp(self):
-        logging.disable(logging.CRITICAL)
+        # logging.disable(logging.CRITICAL)
 
         # Create client
         self.client_json = {

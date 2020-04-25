@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from flash._auth.models import MyUser
-from flash._auth.validators import courier_role_validator, client_role_validator, phone_number_validator, wrong_role
+from flash._auth.validators import courier_role_validator, client_role_validator, phone_number_validator, wrong_role, \
+    manager_role_validator
 
 
 class BaseUserSerializer(serializers.ModelSerializer):

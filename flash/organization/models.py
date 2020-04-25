@@ -2,19 +2,22 @@ from django.db import models
 
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
+from flash.organization.validators import validate_file_size, validate_extension
 from flash.product.bases import BaseProduct
 
 
-class OrganizationManager(models.Manager):
+class OrganizationFilialManager(models.Manager):
 
     def for_user(self, user):
         return self.filter(manager=user)
 
 
 class Organization(BaseProduct):
-    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    logo = models.FileField(upload_to='organizations_logo', null=True, blank=True, validators=[validate_file_size,
+                                                                                               validate_extension, ])
+    manager = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='organizations')
 
-    objects = OrganizationManager()
+    objects = OrganizationFilialManager()
 
     def rate(self, value):
         self.sum += value
@@ -22,7 +25,7 @@ class Organization(BaseProduct):
         self.save()
 
     def __str__(self):
-        return '{} [name: {}, logo: {}]'.format('Organization', self.name, self.logo)
+        return self.name
 
 
 class Filial(models.Model):

@@ -19,6 +19,11 @@ def client_role_validator(value):
         raise serializers.ValidationError('User role is not client')
 
 
+def manager_role_validator(value):
+    if value != 2:
+        raise serializers.ValidationError('User role is not manager')
+        
+
 # Ensure that phone number is right format
 def phone_number_validator(value):
     if len(value) != 11:

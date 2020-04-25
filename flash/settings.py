@@ -163,6 +163,9 @@ JWT_AUTH = {
 }
 
 
+MEDIA_URL = '/logo/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'logo')
+
 # Logging to log directory
 LOG_PATH = os.path.join(BASE_DIR, "log/")
 LOGGING = {

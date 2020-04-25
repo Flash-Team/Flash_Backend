@@ -5,7 +5,7 @@ from django.db import models
 class BaseProduct(models.Model):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=255)
-    logo = models.CharField(max_length=999)                         # indeed url field
+    logo = models.FileField(null=True, blank=True,)                         # indeed url field
     sum = models.IntegerField(default=0)
     count = models.IntegerField(default=1)
 

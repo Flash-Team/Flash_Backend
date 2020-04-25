@@ -49,4 +49,11 @@ class ClientSerializer(UsersSerializer):
     role = serializers.IntegerField(write_only=True, validators=[client_role_validator])
 
     class Meta(UsersSerializer.Meta):
-        pass
+        fields = ('id', 'username', 'first_name', 'last_name', 'role',)
+
+
+class ManagerSerializer(UsersSerializer):
+    role = serializers.IntegerField(write_only=True, validators=[manager_role_validator])
+
+    class Meta(UsersSerializer.Meta):
+        fields = ('id', 'username', 'first_name', 'last_name', 'role',)

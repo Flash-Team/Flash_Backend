@@ -60,8 +60,6 @@ class OrdersViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=(IsAdminUser,))
     def rate(self, request, pk):
-        # self.permission_classes = IsAdminUser(),
-
         """
         Rate all products in following order by value (between 0 and 5)
         """

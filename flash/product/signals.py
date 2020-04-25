@@ -3,7 +3,7 @@ import os
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 
-from flash.product.models import Category, Product
+from flash.product.models import Product
 
 
 @receiver(post_delete, sender=Product)

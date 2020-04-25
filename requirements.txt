@@ -1,4 +1,5 @@
 Django==2.2
+django-debug-toolbar==2.2
 django-filter==2.2.0
 djangorestframework==3.11.0
 djangorestframework-jwt==1.11.0

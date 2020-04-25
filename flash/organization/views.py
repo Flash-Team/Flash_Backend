@@ -46,7 +46,7 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
 class FilialsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
-        return Filial.objects.for_user(self.request.user).filter(organization=self.kwargs.get('parent_lookup_organization'))
+        return Filial.objects.filter(organization=self.kwargs.get('parent_lookup_organization'))
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'GET'):

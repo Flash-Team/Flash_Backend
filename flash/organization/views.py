@@ -21,14 +21,20 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         return OrganizationSerializer
 
     def get_permissions(self):
-        if self.request.user.is_anonymous:
+        user = self.request.user
+
+        if user.is_anonymous:
             return IsAuthenticated(),
 
-        if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
-            if self.request.user.role in (1, 2):
+        elif self.action in ('create', 'update', 'partial_update', 'destroy'):
+            if user.is_admin or user.is_manager:
                 return IsAuthenticated(),
 
             return IsAdminUser(),
+
+        elif self.action == 'rate':
+            if user.is_client:
+                return IsAuthenticated(),
 
         return IsAuthenticated(),
 

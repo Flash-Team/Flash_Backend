@@ -7,8 +7,17 @@ from flash.product.bases import BaseProduct
 from flash.product.validators import validate_file_size, validate_extension
 
 
+class CategoryProductManager(models.Manager):
+
+    def for_user(self, user):
+        if user.role == 2:
+            return self.filter(manager=user)
+        return self.all()
+
+
 class Category(models.Model):
     name = models.CharField(max_length=30)
+    objects = CategoryProductManager()
 
     class Meta:
         verbose_name_plural = 'Categories'
@@ -23,6 +32,7 @@ class Product(BaseProduct):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    objects = CategoryProductManager()
 
     def __str__(self):
         return '{} [name: {}, price: {}]'.format('Product', self.name, self.price)

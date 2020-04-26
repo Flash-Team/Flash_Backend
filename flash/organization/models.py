@@ -9,7 +9,9 @@ from flash.product.bases import BaseProduct
 class OrganizationFilialManager(models.Manager):
 
     def for_user(self, user):
-        return self.filter(manager=user)
+        if user.role == 2:
+            return self.filter(manager=user)
+        return self.all()
 
 
 class Organization(BaseProduct):

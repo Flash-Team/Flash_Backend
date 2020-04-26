@@ -168,6 +168,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'logo')
 
 # Logging to log directory
 LOG_PATH = os.path.join(BASE_DIR, "log/")
+
+if not os.path.join(LOG_PATH):
+    os.mkdir(LOG_PATH)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -197,14 +201,14 @@ LOGGING = {
     },
     'loggers': {
         'info': {
-            'handlers': ['console', 'debug'],
+            'handlers': ['console', 'debug', 'error'],
             'level': 'DEBUG',
             'propagate': True
         },
         'django': {
-            'handlers': ['console', 'debug'],
+            'handlers': ['console', 'debug', 'error'],
             'level': 'INFO',
-            'propagate': True,
-        },
+            'propagate': True
+        }
     },
 }

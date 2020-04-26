@@ -1,9 +1,13 @@
+import logging
+
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 # noinspection PyProtectedMember
 from flash._auth.models import MyUser
 from flash.order.models import Order, OrderedProduct
+
+LOG = logging.getLogger('info')
 
 
 @receiver(post_save, sender=Order)
@@ -26,6 +30,8 @@ def find_courier(sender, instance, created, **kwargs):
 
         instance.set_courier(courier)
 
+        LOG.info('Courier {} handle Order (id: {})'.format(courier.full_name, instance.id))
+
 
 @receiver(post_save, sender=OrderedProduct)
 def recalculate_price(sender, instance, created, **kwargs):
@@ -36,6 +42,8 @@ def recalculate_price(sender, instance, created, **kwargs):
 
     order.calculate_price()
 
+    LOG.info('Price of order (id: {}) recalculated'.format(order.id))
+
 
 @receiver(post_delete, sender=OrderedProduct)
 def recalculate_price_after_delete(sender, instance, **kwargs):
@@ -45,3 +53,5 @@ def recalculate_price_after_delete(sender, instance, **kwargs):
     order = instance.order
 
     order.calculate_price()
+
+    LOG.info('Price of order (id: {}) recalculated'.format(order.id))

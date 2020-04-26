@@ -12,6 +12,11 @@ class OrganizationSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('id', 'name', 'description', 'logo', 'rating', 'manager',)
 
+    def validate_name(self, value):
+        if any(x in value for x in ['%', '&', '$', '^']):
+            raise serializers.ValidationError('invalid character in name field')
+        return value
+
 
 class NestedFilialSerializer(serializers.ModelSerializer):
     class Meta:

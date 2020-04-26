@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -51,14 +51,7 @@ class PasswordView(APIView):
         return Response({'message': 'Default password set'}, status=status.HTTP_200_OK)
 
 
-class UsersView(generics.ListCreateAPIView):
-
-    def get_queryset(self):
-        return MyUser.objects.all()
-
-    def get_serializer_class(self):
-        return UsersSerializer
-
+class UserList(APIView):
     def get_permissions(self):
         if self.request.user.is_anonymous:
             return IsAuthenticated(),
@@ -68,18 +61,16 @@ class UsersView(generics.ListCreateAPIView):
 
         return IsAdminUser(),
 
-    def create(self, request, *args, **kwargs):
+    def get(self, request):
+        users = MyUser.objects.all()
+        serializer = UsersSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
         return Response({'message': 'Not allowed create user here'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class UserView(generics.RetrieveUpdateDestroyAPIView):
-
-    def get_queryset(self):
-        return MyUser.objects.all()
-
-    def get_serializer_class(self):
-        return UsersSerializer
-
+class UserDetail(APIView):
     def get_permissions(self):
         if self.request.user.is_anonymous:
             return IsAuthenticated(),
@@ -88,3 +79,27 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
             return IsAuthenticated(),
 
         return IsAdminUser(),
+
+    def get_object(self, pk):
+        try:
+            return MyUser.objects.get(pk=pk)
+        except MyUser.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        user = self.get_object(pk)
+        serializer = UsersSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = self.get_object(pk)
+        serializer = UsersSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = self.get_object(pk)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

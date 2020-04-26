@@ -2,7 +2,7 @@ import json
 
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,13 +27,11 @@ def register(request):
 
 
 class PasswordView(APIView):
-
     DEFAULT_PASSWORD = 'qwe'
 
     permission_classes = (IsAuthenticated,)
 
     def put(self, request):
-
         password = self.request.data.get('password')
 
         if not password:
@@ -46,7 +44,6 @@ class PasswordView(APIView):
         return Response({'message': 'Password changed'}, status=status.HTTP_200_OK)
 
     def delete(self, request):
-
         self.request.user.set_password(self.DEFAULT_PASSWORD)
 
         self.request.user.save()
@@ -54,7 +51,7 @@ class PasswordView(APIView):
         return Response({'message': 'Default password set'}, status=status.HTTP_200_OK)
 
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return MyUser.objects.all()
@@ -65,7 +62,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.user.is_anonymous:
             return IsAuthenticated(),
-          
+
         if self.request.user.is_admin:
             return IsAuthenticated(),
 
@@ -73,3 +70,21 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         return Response({'message': 'Not allowed create user here'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class UserView(generics.RetrieveUpdateDestroyAPIView):
+
+    def get_queryset(self):
+        return MyUser.objects.all()
+
+    def get_serializer_class(self):
+        return UsersSerializer
+
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return IsAuthenticated(),
+
+        if self.request.user.is_admin:
+            return IsAuthenticated(),
+
+        return IsAdminUser(),

@@ -1,13 +1,16 @@
 from rest_framework import serializers
 
+from flash._auth.serializers import ManagerSerializer
 from flash.organization.models import Organization, Filial
 from flash.organization.validators import rating_validator
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    manager = ManagerSerializer(read_only=True)
+
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'description', 'logo', 'manager', )
+        fields = ('id', 'name', 'description', 'logo', 'rating', 'manager',)
 
 
 class NestedFilialSerializer(serializers.ModelSerializer):

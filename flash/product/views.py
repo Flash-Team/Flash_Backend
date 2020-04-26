@@ -1,8 +1,12 @@
+import logging
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from flash.product.models import Category, Product
 from flash.product.serializers import CategorySerializer, ProductSerializer, NestedProductSerializer
+
+LOG = logging.getLogger('info')
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -24,6 +28,11 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return CategorySerializer
+
+    def perform_create(self, serializer):
+        category = serializer.save()
+
+        LOG.info('Category {} created'.format(category.name))
 
 
 class ProductsListViewSet(viewsets.ModelViewSet):
@@ -51,4 +60,7 @@ class ProductsListViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         category_id = self.kwargs.get('parent_lookup_category')
-        serializer.save(category=Category.objects.get(id=category_id))
+        product = serializer.save(category=Category.objects.get(id=category_id))
+
+        LOG.info('Product {} created in {} category for organization {}'.format(product.name, product.category.name,
+                                                                                product.organization.name))

@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +11,8 @@ from rest_framework.views import APIView
 from flash._auth.models import MyUser
 from flash._auth.serializers import RegisterSerializer, UsersSerializer
 
+LOG = logging.getLogger('info')
+
 
 @csrf_exempt
 def register(request):
@@ -18,7 +21,9 @@ def register(request):
         serializer = RegisterSerializer(data=data)
 
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            LOG.info('User {} with role {} registered'.format(user.username, user.text_role))
+
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -67,6 +72,7 @@ class UserList(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        LOG.error('Cannot create user here')
         return Response({'message': 'Not allowed create user here'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 

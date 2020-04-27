@@ -65,8 +65,8 @@ class ProductsListViewSet(viewsets.ModelViewSet):
         return NestedProductSerializer
 
     def perform_create(self, serializer):
-        category_id = self.kwargs.get('parent_lookup_category')
-        serializer.save(category=Category.objects.get(id=category_id))
+        category_id =product =  self.kwargs.get('parent_lookup_category')
+        product = serializer.save(category=Category.objects.get(id=category_id))
   
         LOG.info('Product {} created in {} category for organization {}'.format(product.name, product.category.name,
                                                                                 product.organization.name))

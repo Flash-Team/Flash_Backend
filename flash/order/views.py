@@ -56,7 +56,8 @@ class OrdersViewSet(viewsets.ModelViewSet):
         """
         order = serializer.save(client=self.request.user)
 
-        LOG.info('{} ordered by {}'.format(order, order.client))
+        LOG.info('From {} to {} ordered (id: {}) by {}'.format(order.filial.address, order.address, order.id,
+                                                               order.client.full_name))
 
     @action(detail=True, methods=['post'], permission_classes=(IsAdminUser,))
     def rate(self, request, pk):
@@ -75,7 +76,7 @@ class OrdersViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        LOG.info('{} delivered and rated for {}'.format(order, value))
+        LOG.info('Order (id: {}) delivered and rated by {} for {}'.format(order.id, request.user.full_name, value))
 
         return Response({'message': 'Rated'}, status=status.HTTP_200_OK)
 

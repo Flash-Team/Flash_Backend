@@ -1,9 +1,12 @@
+import logging
 import os
 
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 
 from flash.organization.models import Organization, Filial
+
+LOG = logging.getLogger('info')
 
 
 @receiver(post_save, sender=Organization)
@@ -27,6 +30,8 @@ def auto_delete_logo_on_delete(sender, instance, **kwargs):
         if os.path.isfile(instance.logo.path):
             os.remove(instance.logo.path)
 
+            LOG.info('Logo {} of organization {} deleted'.format(instance.logo.name, instance.name))
+
 
 @receiver(pre_save, sender=Organization)
 def auto_delete_logo_on_change(sender, instance, **kwargs):
@@ -47,3 +52,5 @@ def auto_delete_logo_on_change(sender, instance, **kwargs):
     if not old_file == new_file:
         if os.path.isfile(old_file.path):
             os.remove(old_file.path)
+
+            LOG.info('Logo {} of organization {} changed to {}'.format(old_file.name, instance.name, new_file.name))

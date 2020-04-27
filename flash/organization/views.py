@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -6,6 +8,8 @@ from rest_framework.response import Response
 from flash.organization.models import Organization, Filial
 from flash.organization.serializers import OrganizationSerializer, FilialSerializer, OrganizationRateSerializer, \
     NestedFilialSerializer
+
+LOG = logging.getLogger('info')
 
 
 class OrganizationsViewSet(viewsets.ModelViewSet):
@@ -37,6 +41,8 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         organization = serializer.save(manager=self.request.user)
 
+        LOG.info('{} organization created with manager {}'.format(organization.name, organization.manager.full_name))
+
     @action(detail=True, methods=['patch'], )
     def rate(self, request, pk):
         value = request.query_params.get('value')
@@ -44,7 +50,9 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         serializer = OrganizationRateSerializer(self.get_object(), data={'value': value})
 
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        organization = serializer.save()
+
+        LOG.info('{} organization rated by {} for {}'.format(organization.name, request.user.full_name, value))
 
         return Response({'message': 'rated'}, status=status.HTTP_200_OK)
 
@@ -74,4 +82,6 @@ class FilialsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         organization_id = self.kwargs.get('parent_lookup_organization')
-        serializer.save(organization=Organization.objects.get(id=organization_id))
+        filial = serializer.save(organization=Organization.objects.get(id=organization_id))
+
+        LOG.info('Filial with address {} created for {}'.format(filial.address, filial.organization))
